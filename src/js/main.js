@@ -1,12 +1,10 @@
-var w = 300;
+var w = 800;
 var h = w
 var padding = 0.05 * w;
-var N = 8;
+var N = 5;
 var dataset = Array.apply(null, Array(N)).map(function (_, i) {return i;});;
 var molecules_data = [];
-var time_step = 10;
-
-
+var time_step = 5;
 var svg = d3.select("body")
           .append("svg")
           .attr("width", w)
@@ -20,8 +18,6 @@ var borderPath = svg.append("rect")
      			.style("stroke", "black")
      			.style("fill", "none")
      			.style("stroke-width", 1);
-
-
 
 function Molecule(id) {
   /* molecule object */
@@ -38,7 +34,6 @@ function Molecule(id) {
   console.log(this.position)
   return this;
 };
-
 
 function move(molecule) {
   /* Moves molecule */
