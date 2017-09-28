@@ -1,8 +1,7 @@
 <!--
+Edited from:
 Author : Atul Pandit
 Email : atul_pandit@yahoo.com / atul.pandit@gmail.com
--->
-<!--
 DEMO LINK
 http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 -->
@@ -16,13 +15,17 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
 <script>
 
-    var numberOfBalls = 20;
+    numberOfBalls = 50;
+    extraBalls = 5;
+    ballLimit = 180;
+    radius = 5;
+
     // Ball object - multiple balls can be created by instantiating new objects
     function Ball(svg, x, y, id, color, aoa, weight) {
         this.posX = x; // cx
         this.posY = y; // cy
         this.color = color;
-        this.radius = 8; // radius and weight same
+        this.radius = radius; // radius and weight same
         this.jumpSize = 1; // equivalent of speed default to 1
         this.svg = svg; // parent SVG
         this.id = id; // id of ball
@@ -33,7 +36,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
             this.aoa = Math.PI / 7;
         if (!this.weight)
             this.weight = 10;
-        this.radius = this.radius + (this.weight * 0.2);
+        this.radius = this.radius;// + (this.weight * 0.2);
 
         this.data = [this.id]; // allow us to use d3.enter()
 
@@ -41,8 +44,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
         // **** aoa is used only here -- earlier I was using to next move position.
         // Now aoa and speed together is velocity
-        this.vx = Math.cos(thisobj.aoa) * thisobj.jumpSize; // velocity x
-        this.vy = Math.sin(thisobj.aoa) * thisobj.jumpSize; // velocity y
+        this.vx = Math.random() * (Math.random() < 0.5 ? -1 : 1); // velocity x
+        this.vy = Math.random() * (Math.random() < 0.5 ? -1 : 1); // velocity y
         this.initialVx = this.vx;
         this.initialVy = this.vy;
         this.initialPosX = this.posX;
@@ -143,8 +146,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         return false;
     }
 
-    var balls = []; // global array representing balls
-    var color = d3.scale.category20();
+    balls = []; // global array representing balls
 
     //courtsey thanks to several internet sites for formulas
     //detect collision, find intersecting point and set new speed+direction for each ball based on weight (weight=radius)
@@ -197,8 +199,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
 
     function Initialize(containerId) {
-        var height = document.getElementById(containerId).clientHeight;
-        var width = document.getElementById(containerId).clientWidth;
+        height = document.getElementById(containerId).clientHeight;
+        width = document.getElementById(containerId).clientWidth;
         gContainerId = containerId;
         gCanvasId = containerId + '_canvas';
         gTopGroupId = containerId + '_topGroup';
@@ -217,7 +219,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         ;
 
         for (var i = 0; i < numberOfBalls; ++i) {
-            balls.push(new Ball(svg, 0, 0, 'n'+(i+1).toString(), "blue", Math.PI / (i+1), (i%2)==0?5 : (5+i)));
+            balls.push(new Ball(svg, width/2, height/2, 'n'+(i+1).toString(), "blue", Math.PI / (i+1), (i%2)==0?5 : (5+i)));
         }
 
         for (var i = 0; i < balls.length; ++i) {
@@ -262,7 +264,23 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
     function OnSpeedChange(val) {
 
-      if (val == "+"){
+      var vxBar = [];
+      var vyBar = [];
+      speedLim = 0.2 * balls.length;
+
+      balls.forEach( function (b) {
+        vxBar.push(Math.abs(b.vx));
+        vyBar.push(Math.abs(b.vy));
+      });
+
+      var vxMax = Math.max.apply(Math, vxBar);
+      var vyMax = Math.max.apply(Math, vyBar);
+      console.log("vxMax: ", vxMax);
+      console.log("vyMax: ", vyMax);
+
+      if (val == "+"  && (vxMax > speedLim || vyMax> speedLim)){
+        console.log("Above speed limit");
+      } else if (val == "+" ){
         for (var i = 0; i < balls.length; ++i) {
               balls[i].vx *= 2;
               balls[i].vy *= 2;
@@ -277,41 +295,42 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
     function OnNumberOfBallsChanged(val) {
 
-      var nBalls = 5;
-
-      if (balls.length > 50){
-        return;
-      } else if (balls.length <= nBalls){
-        return;
-      } else {
 
         if (val == "+"){
-          for (var i = balls.length; i < balls.length + nBalls; ++i) {
-            var newBall = new Ball(svg, 55, 55, 'n'+(i+1).toString(), "blue", Math.PI / (i+1), (i%2)==0?5 : (5+i));
-            console.log(newBall);
-            try{
-              balls.push(newBall);
-            } catch (e) {
-              alert(e.toString());
+          if (balls.length < ballLimit){
+            var newBalls = [];
+            for (var i = balls.length; i < balls.length + extraBalls; ++i) {
+              newBalls.push(new Ball(svg, width/2, height/2, 'n'+(i+1).toString(), "blue", Math.PI / (i+1), (i%2)==0?5 : (5+i)));
             }
-            console.log(i+1)
+            balls = balls.concat(newBalls);
+          } else {
+            console.log("balls.length >= ".concat(ballLimit.toString()));
+            return;
           }
         } else if (val == "-"){
-          for (var i = balls.length; i > balls.length - nBalls; --i) {
+
+          for (var i = balls.length; i > balls.length - extraBalls; --i) {
             d3.selectAll("circle#n"+(i).toString()).remove();
           }
-          balls.splice(balls.length - nBalls, nBalls);
+          balls.splice(balls.length - extraBalls, extraBalls);
         } else {
+          console.log("Incorrect 'val' passed to OnNumberOfBallsChanged")
           return;
         }
-      }
+      console.log("Number of Balls: ", balls.length);
     }
 
 
 
 </script>
-<div id="mainDiv" style="width:320px; height:320px">
+
+
+
+
+
+<div id="mainDiv" style="width:900px; height:450px">
     <div id="drawAreaOuter" style="width:100%; height:100%;  ">
+      <div id="drawArea" style="width:100%; height:100%; border:1px solid gray"></div>
         <div id="menuTop" >
             Temperature
               <div>
@@ -323,8 +342,6 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
                 <button type="button" onclick="OnNumberOfBallsChanged('-')" value="-">-</button>
                 <button type="button" onclick="OnNumberOfBallsChanged('+')" value="+">+</button>
             </div>
-        </div>
-        <div id="drawArea" style="width:100%; height:100%; border:1px solid gray">
         </div>
     </div>
 </div>

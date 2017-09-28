@@ -31,7 +31,10 @@ function Molecule(id) {
   this.velocity = {dx : Math.round(10 * (-1 + Math.round(Math.random())))+1,
                    dy : Math.round(10 * (-1 + Math.round(Math.random())))+1
                  };
-  console.log(this.position)
+        this.data = [this.id]; // allow us to use d3.enter()
+
+
+
   return this;
 };
 
